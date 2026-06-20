@@ -52,7 +52,8 @@ tags = ""
 # Must be in the form of an ss14:// or ss14s:// URI pointing to the status API.
 server_url = ""
 # Comma-separated list of URLs of hub servers to advertise to.
-hub_urls = "https://hub.spacestation14.com/"
+# Advertises to every hub listed; add or remove URLs as needed.
+hub_urls = "https://hub.playss14.com/,https://hub.spacestation14.com/"
 
 [build]
 # *Absolutely all of these can be supplied using a "build.json" file*
@@ -96,7 +97,16 @@ hub_urls = "https://hub.spacestation14.com/"
 # If true, even if authentication is required, localhost is still allowed to login directly regardless.
 # allowlocal = true
 
-# You should probably never EVER need to touch this, but if you need a custom auth server,
-# (the auth server being the one which manages Space Station 14 accounts), you change it here.
-# server = https://auth.spacestation14.com/
+# Dual auth: comma-separated list of auth backends. A login is accepted if any listed backend
+# recognizes the session; backends are tried in the order given. List one URL for single auth.
+# (the auth server being the one which manages Space Station 14 accounts)
+server = "https://auth.playss14.com/,https://auth.spacestation14.com/"
 
+[rules]
+# Date the server rules were last changed, e.g. "2026-06-20" (a full timestamp also works).
+# Any player who last accepted the rules before this date will get the rules popup again
+# (with the wait timer) the next time they connect, just like a first-time join.
+# Bump this whenever you make a meaningful change to the rules. Leave empty to disable.
+last_updated = ""
+# Seconds players must wait before they can accept the rules.
+# time = 45

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
@@ -50,7 +51,7 @@ namespace Robust.Shared.Network
                 var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar(CVars.AuthAllowLocal);
                 var canAuth = msgLogin.CanAuth;
                 var needPk = msgLogin.NeedPubKey;
-                var authServer = _config.GetCVar(CVars.AuthServer);
+                var authServers = GetAuthServers();
 
                 _logger.Verbose(
                     $"{connection.RemoteEndPoint}: Received MsgLoginStart. " +
@@ -140,13 +141,36 @@ namespace Robust.Shared.Network
                     var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
                     var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
 
-                    var url = $"{authServer}api/session/hasJoined" +
-                              $"?hash={authHash}&" +
-                              $"userId={msgEncResponse.UserId}";
                     var serverUrl = _config.GetCVar(CVars.HubServerUrl);
-                    if (!string.IsNullOrWhiteSpace(serverUrl))
-                        url += $"&serverUrl={Uri.EscapeDataString(serverUrl)}";
-                    var joinedRespJson = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
+
+                    // The client may have authenticated against any of our configured auth backends
+                    // (e.g. Steam or Wizden). We don't know which one up front, so try each in turn
+                    // and accept the first that recognizes the session.
+                    HasJoinedResponse? joinedRespJson = null;
+                    foreach (var authServer in authServers)
+                    {
+                        var url = $"{authServer}api/session/hasJoined" +
+                                  $"?hash={authHash}&" +
+                                  $"userId={msgEncResponse.UserId}";
+                        if (!string.IsNullOrWhiteSpace(serverUrl))
+                            url += $"&serverUrl={Uri.EscapeDataString(serverUrl)}";
+
+                        try
+                        {
+                            var resp = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
+                            if (resp is { IsValid: true })
+                            {
+                                joinedRespJson = resp;
+                                break;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            _authLogger.Warning(
+                                "Error contacting auth server {AuthServer} while validating login for {Endpoint}: {Reason}",
+                                authServer, connection.RemoteEndPoint, e.Message);
+                        }
+                    }
 
                     if (joinedRespJson is not {IsValid: true})
                     {
@@ -325,6 +349,19 @@ namespace Robust.Shared.Network
                 _logger.Error("Exception during handshake with peer {0}:\n{1}",
                     NetUtility.ToHexString(connection.RemoteUniqueIdentifier), e);
             }
+        }
+
+        /// <summary>
+        /// Returns the configured authentication backends, in priority order.
+        /// Parsed from the comma-separated <see cref="CVars.AuthServer"/> CVar.
+        /// </summary>
+        private List<string> GetAuthServers()
+        {
+            return _config.GetCVar(CVars.AuthServer)
+                .Split(",", StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .Where(x => x.Length > 0)
+                .ToList();
         }
 
         private async Task<(NetUserId, LoginType)> AssignUserIdAsync(string username)

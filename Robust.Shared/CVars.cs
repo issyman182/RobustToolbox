@@ -991,7 +991,9 @@ namespace Robust.Shared
 
         // Only respected on server, client goes through IAuthManager for security.
         /// <summary>
-        /// Authentication server address.
+        /// Comma-separated list of authentication server addresses.
+        /// A login is accepted if any listed backend (e.g. Steam, Wizden) recognizes the session;
+        /// backends are tried in the order given.
         /// </summary>
         public static readonly CVarDef<string> AuthServer =
             CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
