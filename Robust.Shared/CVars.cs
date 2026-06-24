@@ -722,14 +722,14 @@ namespace Robust.Shared
         /// This can be anything, it does not need a strict format.
         /// </summary>
         public static readonly CVarDef<string> BuildForkId =
-            CVarDef.Create("build.fork_id", "");
+            CVarDef.Create("build.fork_id", "", CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         /// Version string, as a hint to the launcher to manage local files.
         /// This can be anything, it does not need a strict format.
         /// </summary>
         public static readonly CVarDef<string> BuildVersion =
-            CVarDef.Create("build.version", "");
+            CVarDef.Create("build.version", "", CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         /// Content pack the launcher should download to connect to this server.
