@@ -5,8 +5,8 @@
 [log]
 path = "logs"
 format = "log_%(date)s-%(time)s.txt"
-level = 1
-enabled = false
+level = 2
+enabled = true
 
 [net]
 tickrate = 30
@@ -31,8 +31,28 @@ enabled = true
 #  by default the launcher will assume the address and port match that of the status server.
 # connectaddress = "udp://localhost:1212"
 
+[server]
+rules_file = "DefaultRuleset"
+
 [game]
-hostname = "MyServer"
+hostname = "[EN][LRP][EU-W] 🥳Issy's Space Station 14"
+desc = "Beginner friendly chill server with discord. Almost vanilla. Looking for players"
+map = "Box"
+maxplayers = 64
+soft_max_players = 64
+role_timer_override = "Reduced"
+lobbyenabled = true
+
+round_preload_time = 5
+lobbyduration = 120
+map_pool = "StanniMapPool"
+map_rotation = true
+map_memory_depth = 16
+
+new_life_enabled = true
+new_life_cooldown = 300
+new_life_max = 3
+new_life_antag_keep_antag = false
 
 [console]
 # If this is true, people connecting from this machine (loopback)
@@ -46,7 +66,7 @@ loginlocal = true
 advertise = false
 # Comma-separated list of tags, useful for categorizing your server.
 # See https://docs.spacestation14.io/hosts/hub-rules for more details on this when it becomes relevant.
-tags = ""
+tags = "region:eu_w,lang:en,rp:low,[LRP],[EN],Beginnerfriendly, Beginner, LRP, Fun, EU-West"
 # URL of your server. Fill this in if you have a domain name,
 # want to use HTTPS (with a reverse proxy), or other advanced scenarios.
 # Must be in the form of an ss14:// or ss14s:// URI pointing to the status API.
@@ -66,11 +86,11 @@ hub_urls = "https://hub.playss14.com/,https://hub.spacestation14.com/"
 # engine_version = "0.7.6"
 
 # This one is optional, the launcher will delete other ZIPs of the same fork to save space.
-# fork_id = "abacusstation"
+fork_id = "iss14"
 
 # Automatically set if self-hosting client zip, but otherwise use this when updating client build.
 # There is no required format, any change counts as a new version.
-# version = "Example1"
+version = "1.5.0"
 
 # This is where the launcher will download the client ZIP from.
 # If this isn't supplied, the server will check for a file called "Content.Client.zip",
@@ -107,6 +127,61 @@ server = "https://auth.playss14.com/,https://auth.spacestation14.com/"
 # Any player who last accepted the rules before this date will get the rules popup again
 # (with the wait timer) the next time they connect, just like a first-time join.
 # Bump this whenever you make a meaningful change to the rules. Leave empty to disable.
-last_updated = ""
+last_updated = "2026-06-22 23:52 +02:00"
 # Seconds players must wait before they can accept the rules.
-# time = 45
+time = 30
+
+[vote]
+#Sets the duration of the map vote timer.
+timermap = 30
+
+#Sets the duration of the restart vote timer.
+timerrestart = 30
+
+#Sets the duration of the gamemode/preset vote timer.
+timerpreset = 30
+
+#Sets the duration of the map vote timer when ALONE.
+timeralone = 10
+
+[replay]
+record_admin_chat = true
+auto_record = true
+
+[tts]
+# Master switch for Text-To-Speech (neural read-aloud + gibberish). Replicated to clients.
+enabled = true
+
+# OpenAI-compatible speech endpoint (Kokoro-FastAPI). The server POSTs JSON and gets raw PCM back.
+api_url = "http://localhost:8880/v1/audio/speech"
+
+# Endpoint listing available voices (GET). Used by the ttsconfig panel's voice dropdown.
+speakers_url = "http://localhost:8880/v1/audio/voices?legacy=false"
+
+# Endpoint listing available models (GET, optional).
+models_url = "http://localhost:8880/v1/models"
+
+# Optional bearer token sent as the Authorization header.
+api_token = ""
+
+# Model name sent to the backend.
+model = "kokoro"
+
+# Voice used for announcements / messages without a per-character voice.
+default_speaker = "af_heart"
+
+# Speech speed multiplier (Kokoro accepts ~0.25-4.0).
+speed = 1.0
+
+# Sample rate of the raw PCM returned by the backend (Kokoro/OpenAI pcm = 24000). Replicated.
+sample_rate = 24000
+
+# Messages longer than this (characters) are not synthesized.
+max_message_length = 400
+
+# Seconds of silence between queued utterances so voices don't overlap. Replicated.
+queue_delay = 0.15
+
+# Per-voice gender assignments (speaker=m/f/e/n;...). Normally managed by the ttsconfig panel's
+# "Auto-assign genders from voice names" button, but can be set here too.
+# voice_genders = ""
