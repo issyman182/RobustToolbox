@@ -178,6 +178,42 @@ namespace Robust.Server.ViewVariables.Traits
 
             var member = _members[selector.Index];
 
+            // iss14 (server-only, keeps vanilla clients compatible): enum members are sent to the
+            // client as plain text (see ViewVariablesTrait.MakeValueNetSafe), so edits arrive back
+            // as strings (or numbers from serializable-enum paths). Convert them onto the member's
+            // actual enum type. Accepts member names ("SensorCords"), numeric values ("3") and
+            // comma-separated flag lists ("FlagA, FlagB"), case-insensitively.
+            var memberType = member.GetUnderlyingType();
+            if (memberType.IsEnum && value is not null && !value.GetType().IsEnum)
+            {
+                switch (value)
+                {
+                    case string text:
+                        try
+                        {
+                            value = Enum.Parse(memberType, text.Trim(), ignoreCase: true);
+                        }
+                        catch (Exception e) when (e is ArgumentException or OverflowException)
+                        {
+                            _logger.Warning("Failed to parse \"{0}\" as enum {1} while modifying member {2} on session {3}.",
+                                text, memberType.Name, selector.Index, Session.SessionId);
+                            return false;
+                        }
+                        break;
+
+                    case IConvertible:
+                        try
+                        {
+                            value = Enum.ToObject(memberType, value);
+                        }
+                        catch (ArgumentException)
+                        {
+                            // Not a numeric type; let the assignment below fail and log normally.
+                        }
+                        break;
+                }
+            }
+
             switch (member)
             {
                 case PropertyInfo propertyInfo:

@@ -127,6 +127,14 @@ namespace Robust.Server.ViewVariables
             }
             else if (!Session.RobustSerializer.CanSerialize(valType))
             {
+                // iss14 (server-only, keeps vanilla clients compatible): enums the serializer can't
+                // send directly are sent as their plain string name instead of a readonly
+                // ServerValueTypeToken. Vanilla clients show an editable text field for these when
+                // the member is ReadWrite; ViewVariablesTraitMembers.TryModifyProperty parses the
+                // edited text (name, number, or "FlagA, FlagB") back onto the enum type.
+                if (valType.IsEnum)
+                    return value.ToString() ?? string.Empty;
+
                 // Handle KeyValuePair<,>
                 if (valType.IsGenericType && valType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
                 {
