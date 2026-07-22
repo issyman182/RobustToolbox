@@ -89,7 +89,7 @@ hub_urls = "https://hub.playss14.com/,https://hub.spacestation14.com/"
 
 fork_id = "iss14"
 version = "1.8.0"
-engine_version = "277.0.0"
+engine_version = "283.1.0"
 download_url = "https://dl.lemonsquizy.com/{FORK_VERSION}/SS14.Client.zip"
 hash = "E3BC2E826B86CF2EB44025F5E65BAD9F56D21702B6447415990D8E5438880C62"
 # Useful to override if the existing version is bad.
