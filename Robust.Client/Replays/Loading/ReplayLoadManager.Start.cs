@@ -155,13 +155,26 @@ public sealed partial class ReplayLoadManager
         {
             // A transform state referenced this uid as a parent, but the entity itself is missing from the
             // checkpoint (inconsistent recording). Skip it instead of failing the whole replay load.
-            _sawmill.Error($"Entity {uid} is referenced as a transform parent but is missing from the replay checkpoint. Skipping.");
+            var meta = _entMan.GetComponentOrNull<MetaDataComponent>(uid);
+            _sawmill.Error($"Entity {uid} (name '{meta?.EntityName}', prototype '{meta?.EntityPrototype?.ID}', " +
+                           $"exists: {_entMan.EntityExists(uid)}) has no transform in the replay checkpoint. Skipping.");
             return;
         }
 
         var parent = xform.ParentUid;
         if (parent != EntityUid.Invalid)
+        {
+            // Extra diagnostics for inconsistent recordings: name the child that references a missing parent.
+            if (!query.HasComponent(parent))
+            {
+                var meta = _entMan.GetComponentOrNull<MetaDataComponent>(uid);
+                _sawmill.Error($"Replay checkpoint: child entity {uid} " +
+                               $"(name '{meta?.EntityName}', prototype '{meta?.EntityPrototype?.ID}') " +
+                               $"references parent {parent} which has no transform in the checkpoint.");
+            }
+
             AddSorted(parent, sortedList, added, query);
+        }
 
         sortedList.Add(uid);
     }
