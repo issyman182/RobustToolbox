@@ -37,17 +37,37 @@ public sealed partial class ReplayLoadManager
         _implicitData[prototype] = (list, set);
 
         var entCount = _entMan.EntityCount;
-        var uid = _entMan.SpawnEntity(prototype, MapCoordinates.Nullspace);
+        _sawmill.Debug($"Generating implicit data for prototype '{prototype}'");
+
+        EntityUid uid;
+        try
+        {
+            uid = _entMan.SpawnEntity(prototype, MapCoordinates.Nullspace);
+        }
+        catch (Exception e)
+        {
+            _sawmill.Error($"Failed to spawn prototype '{prototype}' while generating implicit replay data. Entities of this prototype may be missing data. Exception: {e}");
+            return (list, set);
+        }
 
         foreach (var (netId, component) in _entMan.GetNetComponents(uid))
         {
             if (!component.NetSyncEnabled)
                 continue;
 
-            var state = _entMan.GetComponentState(_entMan.EventBus, component, null, GameTick.Zero);
-            DebugTools.Assert(state is not IComponentDeltaState);
-            list.Add(new ComponentChange(netId, state, GameTick.Zero));
-            set.Add(netId);
+            _sawmill.Debug($"Generating implicit state for '{prototype}' component {component.GetType().Name}");
+
+            try
+            {
+                var state = _entMan.GetComponentState(_entMan.EventBus, component, null, GameTick.Zero);
+                DebugTools.Assert(state is not IComponentDeltaState);
+                list.Add(new ComponentChange(netId, state, GameTick.Zero));
+                set.Add(netId);
+            }
+            catch (Exception e)
+            {
+                _sawmill.Error($"Failed to generate implicit component state for prototype '{prototype}', component {component.GetType().Name}. Exception: {e}");
+            }
         }
 
         _entMan.DeleteEntity(uid);

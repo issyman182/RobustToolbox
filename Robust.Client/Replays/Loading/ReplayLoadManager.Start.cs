@@ -104,7 +104,8 @@ public sealed partial class ReplayLoadManager
             AddSorted(uid, sorted, added, xformQuery);
         }
         DebugTools.AssertEqual(sorted.Count, entities.Count);
-        DebugTools.AssertEqual(added.Count, entities.Count);
+        // added may exceed entities.Count if the checkpoint referenced parents that are missing from it.
+        DebugTools.Assert(added.Count >= entities.Count);
         await callback(i, total, LoadingState.Initializing, false);
 
         i = 0;
@@ -150,7 +151,15 @@ public sealed partial class ReplayLoadManager
         if (!added.Add(uid))
             return;
 
-        var parent = query.Comp(uid).ParentUid;
+        if (!query.TryGetComponent(uid, out var xform))
+        {
+            // A transform state referenced this uid as a parent, but the entity itself is missing from the
+            // checkpoint (inconsistent recording). Skip it instead of failing the whole replay load.
+            _sawmill.Error($"Entity {uid} is referenced as a transform parent but is missing from the replay checkpoint. Skipping.");
+            return;
+        }
+
+        var parent = xform.ParentUid;
         if (parent != EntityUid.Invalid)
             AddSorted(parent, sortedList, added, query);
 
